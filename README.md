@@ -91,7 +91,10 @@ Claude Code, `.mcp.json` of the owning project:
 }
 ```
 
-Codex, `~/.codex/config.toml`:
+Codex, `~/.codex/config.toml` — note that this file has no per-project scoping,
+so the entry loads in **every** Codex session, personal ones included, carrying
+the account's env file with it. This server is read-only, which is what makes a
+global entry acceptable here; a server with write tools belongs in `.mcp.json`:
 
 ```toml
 [mcp_servers.<account>-twitch]

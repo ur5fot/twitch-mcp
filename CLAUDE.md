@@ -4,7 +4,7 @@
 канале, статус эфира, свежие видео, расписание. Полное описание — `README.md`
 (канон).
 
-**Как переехал сюда:** `hub/docs/plans/*-mcp-tools-relocation.md`.
+**Как переехал сюда:** `hub/docs/plans/**/*-mcp-tools-relocation.md`.
 
 ## Статус
 
