@@ -272,12 +272,14 @@ async function parseJsonResponse(response, fallbackMessage) {
 }
 
 async function readResponseBody(response) {
-  const contentType = response.headers?.get?.('content-type') ?? '';
-  if (contentType.includes('application/json')) return response.json();
-
+  // Read the body exactly once: a Response body cannot be consumed twice, so
+  // parsing as JSON and then falling back to .text() throws "Body is unusable"
+  // and hides the real failure (an HTML 5xx page, a proxy error, an empty body).
+  const raw = await response.text();
+  if (!raw) return {};
   try {
-    return await response.json();
+    return JSON.parse(raw);
   } catch {
-    return { message: await response.text() };
+    return { message: raw };
   }
 }

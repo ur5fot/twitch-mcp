@@ -10,16 +10,20 @@ import {
   sanitizeUser,
 } from '../src/twitch-api.js';
 
-function jsonResponse(body, { ok = true, status = 200, statusText = 'OK' } = {}) {
-  return {
-    ok,
+/**
+ * A real Response, not a hand-rolled stub: its body can only be consumed once,
+ * which is exactly the constraint the error path has to respect.
+ */
+function jsonResponse(body, { status = 200, statusText = 'OK' } = {}) {
+  return new Response(JSON.stringify(body), {
     status,
     statusText,
-    headers: new Map([['content-type', 'application/json']]),
-    async json() {
-      return body;
-    },
-  };
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
+function textResponse(body, { status = 200, statusText = 'OK', contentType = 'text/html' } = {}) {
+  return new Response(body, { status, statusText, headers: { 'content-type': contentType } });
 }
 
 async function withEnv(values, fn) {
@@ -179,7 +183,7 @@ test('helix throws structured errors', async () => {
     accessToken: 'token',
     fetchImpl: async () => jsonResponse(
       { status: 401, message: 'Invalid OAuth token' },
-      { ok: false, status: 401, statusText: 'Unauthorized' },
+      { status: 401, statusText: 'Unauthorized' },
     ),
   });
 
@@ -189,4 +193,35 @@ test('helix throws structured errors', async () => {
       && error.status === 401
       && error.message === 'Invalid OAuth token',
   );
+});
+
+test('a non-JSON error response reports the status, not a body-reuse crash', async () => {
+  const api = new TwitchApi({
+    clientId: 'client-id',
+    accessToken: 'token',
+    fetchImpl: async () => textResponse('<html>502 Bad Gateway</html>', {
+      status: 502,
+      statusText: 'Bad Gateway',
+    }),
+  });
+
+  await assert.rejects(
+    () => api.helix('/users', { login: 'testchannel' }),
+    (error) => {
+      assert.ok(error instanceof TwitchApiError, `expected TwitchApiError, got ${error.name}`);
+      assert.equal(error.status, 502);
+      assert.doesNotMatch(error.message, /Body is unusable|already been read/);
+      return true;
+    },
+  );
+});
+
+test('an empty body does not crash the response parser', async () => {
+  const api = new TwitchApi({
+    clientId: 'client-id',
+    accessToken: 'token',
+    fetchImpl: async () => new Response(null, { status: 204, statusText: 'No Content' }),
+  });
+
+  assert.deepEqual(await api.helix('/users', { login: 'testchannel' }), {});
 });
