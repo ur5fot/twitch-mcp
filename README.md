@@ -116,6 +116,19 @@ is missing — that is the first thing to check when the server does not come up
 and `/opt/homebrew/bin/node` is not the same runtime as `node` from a nvm PATH,
 so `npm install` and the server can end up on different versions.
 
+## Second Account
+
+Nothing to copy or fork:
+
+1. create a second env file in the project that owns that channel
+   (`TWITCH_CLIENT_ID`, `TWITCH_ACCESS_TOKEN`, `TWITCH_CHANNEL_LOGIN`);
+2. add a second entry to that project's `.mcp.json` with a different instance
+   name and that env file;
+3. restart the client.
+
+One developer app can serve several channels: the app credentials say who is
+asking, `TWITCH_CHANNEL_LOGIN` says which channel is read.
+
 ## Safe Workflow
 
 ```text
@@ -129,6 +142,18 @@ so `npm install` and the server can end up on different versions.
 8. twitch_get_stream_status
 9. twitch_get_recent_videos or twitch_get_channel_schedule when needed
 ```
+
+## Troubleshooting
+
+- **Server does not start at all.** `--env-file` (unlike `--env-file-if-exists`)
+  **fails** when the file is missing — check the path first.
+- **`npm install` and the server disagree on versions.**
+  `/opt/homebrew/bin/node` is not the same runtime as `node` from a nvm PATH.
+- **`TWITCH_CHANNEL_LOGIN is not set`.** By design: without a login the tool
+  fails instead of silently reading someone else's channel. Pass `login`
+  explicitly or fill the env file (`TWITCH_BROADCASTER_LOGIN` also works).
+- **`401 Unauthorized` from Helix.** The app access token expired or does not
+  match `TWITCH_CLIENT_ID`; `twitch_validate_token` tells them apart.
 
 ## Current Limits
 
