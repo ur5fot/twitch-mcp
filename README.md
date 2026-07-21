@@ -150,6 +150,9 @@ asking, `TWITCH_CHANNEL_LOGIN` says which channel is read.
 
 - **Server does not start at all.** `--env-file` (unlike `--env-file-if-exists`)
   **fails** when the file is missing — check the path first.
+- **`bad option: --env-file`.** The `node` on PATH is older than 20.6, where the
+  flag does not exist yet. That is a different failure from a missing env file:
+  check `node -v` of the exact binary named in `command`.
 - **`npm install` and the server disagree on versions.**
   `/opt/homebrew/bin/node` is not the same runtime as `node` from a nvm PATH.
 - **`TWITCH_CHANNEL_LOGIN is not set`.** By design: without a login the tool
